@@ -5,9 +5,9 @@
 # @Contact: qingyaocui@gmail.com
 
 import re
-from util import write_to_json, write_to_json_min, clean_data, read_from_json
-from settings import CORPUS, CLEAN_CORPUS, WORD_DICT_FILE
-from tqdm import tqdm
+from utils.util import write_to_json, write_to_json_min, clean_data, read_from_json
+from conf.settings import CORPUS, CLEAN_CORPUS, WORD_DICT_FILE
+
 
 def build_dict(corpus=CORPUS, word_dict_file=WORD_DICT_FILE):
     '''
@@ -44,10 +44,13 @@ def build_dict(corpus=CORPUS, word_dict_file=WORD_DICT_FILE):
     write_to_json(word_dict, word_dict_file)
     write_to_json_min(word_dict, './data/word_dict_min.json')
 
-
+def max_len_of_word(word_dict_file=WORD_DICT_FILE):
+    word_dict = read_from_json(word_dict_file)
+    max_len = 0
+    for word in word_dict:
+        if max_len < len(word):
+            max_len = len(word)
+    return max_len
 if __name__ == '__main__':
-    build_dict()
-    # word_content = read_from_json(WORD_CONTENT_FILE)
-    # word_index = read_from_json(WORD_INDEX_FILE)
-    # print(len(word_content))
-    # print(word_content[word_index['19980106-01-005-007']])
+    max_len = max_len_of_word()
+    print(max_len)

@@ -40,7 +40,7 @@ def read_from_json(data_file):
 
 def clean_data(corpus, clean_corpus):
     '''
-    清洗数据，除去空行
+    清洗数据，除去空行，并为每句话增加起始和终止标记
     :param corpus:
     :param clean_corpus:
     :return:
@@ -51,6 +51,6 @@ def clean_data(corpus, clean_corpus):
                 with open(clean_corpus, 'w', encoding='utf8') as f_out:
                     for line in f_in:
                         if len(line.split()) != 0:
-                            f_out.write(line)
+                            f_out.write('<B>/BEG  ' + line.strip() + '  <E>/END\n')
     else:
         raise Exception('原始数据路径不存在！')
