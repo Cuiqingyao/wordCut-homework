@@ -12,11 +12,15 @@ CLEAN_CORPUS_WITHOUT_POS = os.path.join(os.path.dirname(CORPUS), os.path.basenam
 
 WORD_DICT_FILE = '/home/cuiqy/wordCut-homework/data/word_dict.json'
 WORD_DICT_SIZE = 74794
-
 MAX_LEN_OF_WORD = 26
 
-N_GRAM_MODEL = '/home/cuiqy/wordCut-homework/data/n_gram.json'
+# None 不加平滑
+# additive_smoothing 加1平滑
+# GT good-turing
+# katz Katz
+SMOOTH_METHOD = 'additive_smoothing'
+N_GRAM_MODEL = '/home/cuiqy/wordCut-homework/data/n_gram%s.json'%(SMOOTH_METHOD)
 
-SMOOTH_METHOD = 'additive_smoothing' # GT Katz
+
 
 

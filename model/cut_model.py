@@ -55,9 +55,12 @@ class Ngram(object):
                         c_w1 = word_dict[w1]['count']
                         for line in context:
                             c_w1w2 += len(re.findall(w1+' '+w2, line))
+                        if self.smooth_method == 'additive_smoothing':
+                            c_w1w2, c_w1 = self.__additive_smoothing(c_w1w2, c_w1)
 
                         P_n_gram[p_word] = c_w1w2/c_w1
-                        # print(p_word , P_n_gram[p_word])
+                        print(p_word , P_n_gram[p_word])
+                        exit()
                     index += 1
             write_to_json_min(P_n_gram, self.model_file)
             return P_n_gram
@@ -94,7 +97,7 @@ class Ngram(object):
         word_dict = read_from_json(self.word_dict_file)
         return word_dict
 
-    def __additive_smoothin(self, c_w1w2, c_w2):
+    def __additive_smoothing(self, c_w1w2, c_w2):
         '''
         加一平滑
         :return:
@@ -185,17 +188,18 @@ if __name__ == '__main__':
     # backward_maximun_match('19980101-01-001-001迈向充满希望的新世纪——一九九八年新年讲话（附图片１张）')
     # print('forward_maximun_match:')
     # forward_maximum_match('19980101-01-001-001迈向充满希望的新世纪——一九九八年新年讲话（附图片１张）')
-    # n_gram = Ngram()
-    my_model = read_from_json(N_GRAM_MODEL)
-    print(len(my_model))
-
-    all_tokens = []
-    with open(CLEAN_CORPUS_WITHOUT_POS, 'r', encoding='utf8') as f:
-        for line in f:
-            tokens = re.split(r'\s+', line.strip())
-            all_tokens.append(tokens)
-    s = 0
-    for one_line in all_tokens:
-        s += len(one_line) - 1
-
-    print('s:', s)
+    n_gram = Ngram()
+    # my_model = read_from_json(N_GRAM_MODEL)
+    # print(len(my_model))
+    #
+    # all_tokens = []
+    # with open(CLEAN_CORPUS_WITHOUT_POS, 'r', encoding='utf8') as f:
+    #     for line in f:
+    #         tokens = re.split(r'\s+', line.strip())
+    #         all_tokens.append(tokens)
+    # s = 0
+    # for one_line in all_tokens:
+    #     s += len(one_line) - 1
+    #
+    # print('s:', s)
+    pass
