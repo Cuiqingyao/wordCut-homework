@@ -27,7 +27,7 @@ class Ngram(object):
         self.model = self.__build_model()
 
     def __str__(self):
-        return 'model：%s-gram based on %s' % (self.n, self.corpus)
+        return '%d-gram Model' % (self.n)
 
     def __build_model(self):
 
@@ -98,7 +98,7 @@ class Ngram(object):
         c_w2 += self.word_types
         return c_w1w2, c_w2
 
-    def cal_sentence_prob(self, segment):
+    def __cal_sentence_prob(self, segment):
         '''
         计算句子的概率
         :param segment:
@@ -123,6 +123,26 @@ class Ngram(object):
             index += 1
 
         return P_of_segment
+    def __segment_sentence(self, sentence):
+        '''
+        对一句话进行分词
+        :param sentence:
+        :return:
+        '''
+        # 实现重点
+        pass
+    def segment(self, file):
+        '''
+        n-gram模型分词接口
+        :param file:
+        :return:
+        '''
+        segment_words = []
+        with open(file, 'r', encoding='utf8') as f:
+            for line in f:
+                segment_words.append(self.__segment_sentence(line.strip()))
+
+        return segment_words
 
 class HMM(object):
 
@@ -234,7 +254,7 @@ class HMM(object):
             self.init_status_prob[i] = self.LOG_NEGATIVE_INF if self.init_status_prob[i] == 0 \
                 else math.log(self.init_status_prob[i] / total)
 
-    def viterbi_cut(self, sentence):
+    def __viterbi_cut(self, sentence):
         '''
         viterbi算法
         :return:
@@ -314,7 +334,7 @@ class HMM(object):
         segment_words = []
         with open(file, 'r', encoding='utf8') as f:
             for line in f:
-                segment_words.append(re.split(r'\s+', self.viterbi_cut(line.strip()).strip()))
+                segment_words.append(re.split(r'\s+', self.__viterbi_cut(line.strip()).strip()))
 
         return segment_words
 

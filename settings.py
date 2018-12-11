@@ -57,5 +57,8 @@ N_GRAM_MODEL = os.path.join(BASE_DIR, 'data', 'n_gramadditive_smoothing.json')
 
 ################    N-gram    ################
 
+# 目标分词文件
+TARGET_FILE = os.path.join(BASE_DIR, 'test.txt')
+
 # 最终输出结果
 RESULT_FILE = os.path.join(BASE_DIR, '2018140546.txt')
