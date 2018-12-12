@@ -29,10 +29,9 @@ WORD_DICT_FILE =  os.path.join(BASE_DIR, 'data', 'word_dict.json')
 TRAINING = 0.9
 TEST = 1 - TRAINING
 
-# 语料相关统计
-WORD_TYPES = 52543
+# 最大词长, 影响FMM 和 BMM
 MAX_LEN_OF_WORD = 5
-TOKENS = 1017982
+
 ################    Corpus    ################
 
 
@@ -53,7 +52,19 @@ TRANS_MATRIX = os.path.join(BASE_DIR, 'data', 'hmm', 'trans_matrix.txt')
 ################    N-gram    ################
 
 # n-gram模型统计数据
-N_GRAM_MODEL = os.path.join(BASE_DIR, 'data', 'n_gramadditive_smoothing.json')
+BIGRAM_PROB_TAB_EVAL = os.path.join(BASE_DIR, 'data', 'n_gram','bigram_prob_tab_eval.json')
+
+# n-gram模型统计数据
+TRAINING_FILE_FOR_BIGRAM = os.path.join(BASE_DIR, 'data', 'n_gram','199801-bigram.txt')
+
+# 基于全语料的词典
+WORD_DICT_FILE_FOR_BIGRAM =  os.path.join(BASE_DIR, 'data', 'n_gram', 'word_dict_bigram.json')
+
+# 基于全语料的词典
+BIGRAM_PROB_TAB =  os.path.join(BASE_DIR, 'data', 'n_gram', 'bigram_prob_tab.json')
+
+# n-gram 是否用于评估
+IS_EVALUATION = False
 
 ################    N-gram    ################
 

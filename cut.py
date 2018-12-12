@@ -4,7 +4,7 @@
 # @Desc  : 
 # @Contact: qingyaocui@gmail.com
 
-from cut_model import Ngram, HMM, MechanicalSegmentation
+from cut_model import Bigram, HMM, MechanicalSegmentation
 from settings import RESULT_FILE, TARGET_FILE
 
 def main(M, target=TARGET_FILE, result_file=RESULT_FILE):
@@ -23,6 +23,6 @@ def main(M, target=TARGET_FILE, result_file=RESULT_FILE):
 
 
 if __name__ == '__main__':
-    main(M=Ngram)
+    main(M=Bigram)
     # main(M=HMM)
     # main(M=MechanicalSegmentation)

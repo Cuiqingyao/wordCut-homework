@@ -9,67 +9,100 @@ import math
 from settings import *
 from utils.util import *
 from tqdm import tqdm
+from collections import defaultdict
+from pprint import pprint
+import json
 
-class Ngram(object):
 
-    def __init__(self, n=2, corpus=TRAINING_FILE,
-                 model_file=N_GRAM_MODEL,
-                 max_len=MAX_LEN_OF_WORD,
-                 word_dict_file=WORD_DICT_FILE,
-                 word_types=WORD_TYPES):
-        self.n = n
-        self.corpus = corpus
-        self.model_file = model_file
-        self.max_len = max_len
-        self.word_dict_file = word_dict_file
-        self.word_types = word_types
+class Bigram(object):
+
+    def __init__(self):
+        self.is_evaluation = IS_EVALUATION
+        if self.is_evaluation:
+            self.corpus = TRAINING_FILE
+            self.word_dict_file = WORD_DICT_FILE
+            self.bigram_file = BIGRAM_PROB_TAB_EVAL
+        else:
+            self.corpus = TRAINING_FILE_FOR_BIGRAM
+            self.word_dict_file = WORD_DICT_FILE_FOR_BIGRAM
+            self.bigram_file = BIGRAM_PROB_TAB
         self.word_dict = self.__load_word_dict()
-        self.model = self.__build_model()
+        self.bigram = self.__build_model()
 
     def __str__(self):
-        return '%d-gram Model' % (self.n)
+        return 'Bigram Model'
+
+    def __construct_segment(self, sentence, max_len=5):
+        '''
+        递归构造所有可能的切分方式
+        :return:可能的切分组合
+        '''
+        # 切分组合  [ [切分方案1], [切分方案2], ... ]
+        splits = []
+
+        # 递归结束条件
+        if len(sentence) < 2:
+            return [[sentence]]
+
+        scope_max = max_len if max_len < len(sentence) else len(sentence)
+        # 保存当前二切分结果
+        current_groups = []
+        single_cut = True
+        for i in range(1, scope_max)[::-1]:
+            # 词典存在子词串，二分切分
+            if sentence[:i] in self.word_dict and i != 1:
+                current_groups.append([sentence[:i], sentence[i:]])
+                single_cut = False
+        if single_cut or sentence[1:3] in self.word_dict:
+            current_groups.append([sentence[:1], sentence[1:]])
+
+        if len(sentence) <= 3:
+            current_groups.append([sentence])
+        # 对每一个切分，递归组合
+        for one_group in current_groups:
+            if len(one_group) == 1:
+                splits.append(one_group)
+                continue
+            for child_group in self.__construct_segment(one_group[1]):
+                child_group.insert(0, one_group[0])
+                splits.append(child_group)
+        return splits
 
     def __build_model(self):
 
-        if not os.path.exists(self.model_file):
-            print("构建2元语法模型...")
+        if not os.path.exists(self.bigram_file):
+            print("构建bi-gram...")
             # 计算n_gram概率分布
-            P_n_gram = {}
-            context, all_tokens = self.__load_training_data()
+            count_bigram = defaultdict(dict)
+
+            all_tokens = self.__load_training_data()
 
             for i in tqdm(range(len(all_tokens))):
                 index = 0
                 while index < len(all_tokens[i]) - 1:
 
-                    w2 = all_tokens[i][index + 1]
-                    w1 = all_tokens[i][index]
-                    p_word = w2 + '|' + w1
-
-                    if p_word not in P_n_gram:
-                        c_w1w2 = 0
-                        c_w1 = self.word_dict[w1]['count']
-                        for line in context:
-                            c_w1w2 += len(re.findall(w1 + ' ' + w2, line))
-                        c_w1w2, c_w1 = self.__additive_smoothing(c_w1w2, c_w1)
-
-                        P_n_gram[p_word] = c_w1w2 / c_w1
+                    cur_word = all_tokens[i][index + 1]
+                    front_word = all_tokens[i][index]
+                    if front_word not in count_bigram:
+                        count_bigram[front_word] = defaultdict(float)
+                        count_bigram[front_word][cur_word] += 1
                     index += 1
-            write_to_json(P_n_gram, self.model_file)
-            return P_n_gram
+
+            write_to_json(count_bigram, self.bigram_file)
+            return count_bigram
         else:
-            print("2元语法模型已存在，正在加载...")
+            print("bi-gram模型已存在，正在加载...")
             return self.__load_model()
 
     def __load_training_data(self):
-        context = []
+
         all_tokens = []
         with open(self.corpus, 'r', encoding='utf8') as f:
             for line in f:
-                context.append(line.strip())
                 tokens = re.split(r'\s+', line.strip())
                 all_tokens.append(tokens)
 
-        return context, all_tokens
+        return all_tokens
 
     def __load_model(self):
         '''
@@ -77,8 +110,8 @@ class Ngram(object):
         :param model_file:
         :return:
         '''
-        P_n_gram = read_from_json(self.model_file)
-        return P_n_gram
+        count_bigram = read_from_json(self.bigram_file)
+        return count_bigram
 
     def __load_word_dict(self):
         '''
@@ -89,40 +122,52 @@ class Ngram(object):
         word_dict = read_from_json(self.word_dict_file)
         return word_dict
 
-    def __additive_smoothing(self, c_w1w2, c_w2):
-        '''
-        加一平滑
-        :return:
-        '''
-        c_w1w2 += 1
-        c_w2 += self.word_types
-        return c_w1w2, c_w2
+    # def __additive_smoothing(self, c_w1w2, c_w2):
+    #     '''
+    #     加一平滑
+    #     :return:
+    #     '''
+    #     c_w1w2 += 1
+    #     c_w2 += self.__wordtypes()
+    #     return c_w1w2, c_w2
 
-    def __cal_sentence_prob(self, segment):
+    def __wordtypes(self):
         '''
-        计算句子的概率
-        :param segment:
+        获取word types
         :return:
         '''
-        index = 0
-        P_of_segment = 1
-        while index < len(segment) - 1:
-            w2 = segment[index + 1]
-            w1 = segment[index]
-            p_word = w2 + '|' + w1
-            if p_word in self.model:
-                p = (self.model[p_word] + 1) / (self.word_dict[w1]['count'] + self.word_types)
-                P_of_segment *= p
-            else:
-                # 暂时是加一平滑
-                if w1 not in self.word_dict:
-                    p = 1 / self.word_types
+        return len(self.word_dict)
+
+    def __cal_sentence_prob(self, splits):
+        '''
+        使用加一平滑方法，计算得出最大概率分词序列
+        :param splits: 分法组合
+        :return: 最佳分词方案
+        '''
+        maxp_split = []
+
+        for split in splits:
+            # 计算概率 为了防止溢出 对概率取对数，转换乘法为加法
+            index = 0
+            P_of_segment = 0
+            while index < len(split) - 1:
+                cur_word = split[index + 1]
+                front_word = split[index]
+                p_word = cur_word + '|' + front_word
+                if  cur_word in self.bigram[front_word]:
+                    p = math.log(((self.bigram[front_word][cur_word] + 1)/(self.word_dict[front_word] + self.__wordtypes())))
+                    P_of_segment += p
                 else:
-                    p = 1 / (self.word_dict[w1]['count'] + self.word_types)
-                P_of_segment *= p
-            index += 1
+                    if front_word not in self.word_dict:
+                        p = math.log(1 / self.__wordtypes())
+                    else:
+                        p = math.log((1 / (self.word_dict[front_word] + self.__wordtypes())))
+                    P_of_segment += p
 
-        return P_of_segment
+                index += 1
+
+        return maxp_split
+
     def __segment_sentence(self, sentence):
         '''
         对一句话进行分词
@@ -130,7 +175,8 @@ class Ngram(object):
         :return:
         '''
         # 实现重点
-        pass
+        return self.__cal_sentence_prob(self.__segment_sentence(sentence=sentence))
+
     def segment(self, file):
         '''
         n-gram模型分词接口
@@ -144,8 +190,8 @@ class Ngram(object):
 
         return segment_words
 
-class HMM(object):
 
+class HMM(object):
     STATUS = (_B, _E, _M, _S) = range(4)
     LOG_NEGATIVE_INF = -3.14e+100
 
@@ -181,6 +227,7 @@ class HMM(object):
 
     def __str__(self):
         return 'Hidden Markov Model'
+
     def init_model_data(self, file):
 
         if os.path.exists(TRANS_MATRIX) and os.path.exists(INIT_STATUS) and os.path.exists(EMISSION_MATRIX):
@@ -300,7 +347,6 @@ class HMM(object):
                 result += seg_char
         return result
 
-
     def __change_dict_value(self, d, key):
         '''
         如果概率表中有这个词，计数加1，如果没有，设置为1
@@ -337,6 +383,7 @@ class HMM(object):
                 segment_words.append(re.split(r'\s+', self.__viterbi_cut(line.strip()).strip()))
 
         return segment_words
+
 
 class MechanicalSegmentation(object):
     '''
@@ -386,7 +433,6 @@ class MechanicalSegmentation(object):
 
         return segment
 
-
     def __backward_maximum_match(self, sentence):
         '''
         反向最大匹配
@@ -420,7 +466,6 @@ class MechanicalSegmentation(object):
         segment = segment[::-1]
         return segment
 
-
     def segment(self, file):
         '''
         机械分词算法分词接口,对一段文本分词
@@ -437,3 +482,6 @@ class MechanicalSegmentation(object):
                     segment_words.append(self.__forward_maximum_match(line.strip()))
 
         return segment_words
+
+
+

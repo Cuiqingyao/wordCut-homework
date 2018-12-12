@@ -50,6 +50,15 @@ class DataHelper(object):
                 self.__number_of_word_types(word_dict=word_dict)
                 # tokens
                 self.__number_of_tokens(training_data=training_data)
+
+            # 基于全语料库的构建词典
+            if os.path.exists(TRAINING_FILE_FOR_BIGRAM):
+                word_dict_bigram = {}
+                bi_gram_data = self.__load(type='txt', data_file=TRAINING_FILE_FOR_BIGRAM)
+                for data in bi_gram_data:
+                    for word in data:
+                        self.__update_count(d=word_dict_bigram, key=word)
+                self.__save(data=word_dict_bigram, type='json', data_file=WORD_DICT_FILE_FOR_BIGRAM)
         except Exception as e:
             print(e)
             print("程序正在推出...")
@@ -123,7 +132,8 @@ class DataHelper(object):
         '''
         if os.path.exists(TRAINING_FILE) and \
             os.path.exists(TEST_FILE) and \
-            os.path.exists(WORD_DICT_FILE):
+            os.path.exists(WORD_DICT_FILE) and\
+            os.path.exists(TRAINING_FILE_FOR_BIGRAM):
             print('数据已经处理完毕...')
         else:
             print('数据预处理  ... ')
@@ -175,6 +185,7 @@ class DataHelper(object):
         assert TRAINING < 1.0 and TEST < 1.0 and (TRAINING + TEST) == 1.0
         try:
             clean_data = self.__clean_corpus()
+
             training_size = math.ceil(TRAINING * len(clean_data))
             training_data = clean_data[0:training_size]
             answers = clean_data[training_size:]
@@ -190,6 +201,11 @@ class DataHelper(object):
                 test_data.append(sentence)
             write_sentences(txt_data=test_data, data_file=TEST_FILE)
 
+            # 生成整个语料数据用于训练bigram
+            for data in clean_data:
+                data.insert(0, '<B>')
+            self.__save(data=clean_data, type='txt', data_file=TRAINING_FILE_FOR_BIGRAM)
+
         except Exception as e:
             print(e)
             print("程序正在推出...")
@@ -198,3 +214,5 @@ class DataHelper(object):
 if __name__ == '__main__':
     datahelper = DataHelper()
     datahelper.prcessed()
+
+
