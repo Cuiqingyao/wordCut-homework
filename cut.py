@@ -19,9 +19,9 @@ def main(M, target=TARGET_FILE, result_file=RESULT_FILE):
     results = model.segment(file=target)
     with open(result_file, 'w', encoding='utf8') as f:
         for result in results:
-            f.write(' '.join(result[1:-1]) + '\n')
+            f.write(' '.join(result) + '\n')
 
 
 if __name__ == '__main__':
-    IS_COMBINE = True
+
     main(M=MechanicalSegmentation)

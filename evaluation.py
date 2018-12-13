@@ -109,7 +109,7 @@ if __name__ == '__main__':
         evaluation_model = MechanicalSegmentation
     elif len(sys.argv) == 2:
         para = sys.argv[1]
-        print(para)
+        # print(para)
         if para == 'bigram':
             evaluation_model = Bigram
         elif para == 'hmm' :

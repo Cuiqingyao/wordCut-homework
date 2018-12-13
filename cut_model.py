@@ -408,7 +408,7 @@ class MechanicalSegmentation(object):
     '''
     机械分词算法，正向最大，反向最大
     '''
-    __WORD_DIC = read_from_json(WORD_DICT_FILE)
+    __WORD_DIC = read_from_json(WORD_DICT_FILE) if IS_EVALUATION == True else read_from_json(WORD_DICT_FILE_FOR_BIGRAM)
 
     def __init__(self, is_backward=IS_BACK, max_len_of_word=MAX_LEN_OF_WORD):
         self.is_backward = is_backward
@@ -494,6 +494,7 @@ class MechanicalSegmentation(object):
         :param file: 要分词的语料
         :return:
         '''
+
         segment_words = []
         if not is_combine:
             with open(file, 'r', encoding='utf8') as f:
@@ -506,12 +507,11 @@ class MechanicalSegmentation(object):
                         segment_words.append(self.__forward_maximum_match(line.strip()))
         else:
             bigram = Bigram()
-            with open(file, 'r', encoding='utf8') as f:
-                if self.is_backward:
-                    for line in f:
-                        back = self.__backward_maximum_match(line.strip())
-                        forward = self.__forward_maximum_match(line.strip())
-                        segment_words.append(bigram.cal_sentence_prob([forward, back]))
+            with open(file, 'r', encoding='utf-8-sig') as f:
+                for line in f:
+                    back = self.__backward_maximum_match(line.strip())
+                    forward = self.__forward_maximum_match(line.strip())
+                    segment_words.append(bigram.cal_sentence_prob([forward, back]))
 
 
         return segment_words
