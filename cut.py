@@ -4,8 +4,8 @@
 # @Desc  : 
 # @Contact: qingyaocui@gmail.com
 
-from cut_model import Bigram, HMM, MechanicalSegmentation
-from settings import RESULT_FILE, TARGET_FILE
+from cut_model import MechanicalSegmentation
+from settings import *
 
 def main(M, target=TARGET_FILE, result_file=RESULT_FILE):
     '''
@@ -23,6 +23,5 @@ def main(M, target=TARGET_FILE, result_file=RESULT_FILE):
 
 
 if __name__ == '__main__':
-    main(M=Bigram)
-    # main(M=HMM)
-    # main(M=MechanicalSegmentation)
+    IS_COMBINE = True
+    main(M=MechanicalSegmentation)

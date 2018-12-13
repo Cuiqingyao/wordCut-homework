@@ -4,10 +4,11 @@
 # @Desc  : 
 # @Contact: qingyaocui@gmail.com
 import os
+import sys
 
 # project root dir
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-
+sys.path.append(BASE_DIR)
 ################    Corpus    ################
 
 # 原始语料路径
@@ -31,6 +32,10 @@ TEST = 1 - TRAINING
 
 # 最大词长, 影响FMM 和 BMM
 MAX_LEN_OF_WORD = 5
+
+# 设置为True 表示机械分词时默认使用逆向最大匹配，False则为正向最大匹配
+IS_BACK = True
+
 
 ################    Corpus    ################
 
@@ -64,7 +69,10 @@ WORD_DICT_FILE_FOR_BIGRAM =  os.path.join(BASE_DIR, 'data', 'n_gram', 'word_dict
 BIGRAM_PROB_TAB =  os.path.join(BASE_DIR, 'data', 'n_gram', 'bigram_prob_tab.json')
 
 # n-gram 是否用于评估
-IS_EVALUATION = True
+IS_EVALUATION = False
+
+# 为True表示使用正向+逆向+Bigram
+IS_COMBINE = True
 
 ################    N-gram    ################
 
@@ -73,3 +81,4 @@ TARGET_FILE = os.path.join(BASE_DIR, 'test.txt')
 
 # 最终输出结果
 RESULT_FILE = os.path.join(BASE_DIR, '2018140546.txt')
+

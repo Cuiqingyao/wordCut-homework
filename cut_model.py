@@ -7,7 +7,7 @@
 import numpy as np
 import math
 from settings import *
-from utils.util import *
+from util import *
 from tqdm import tqdm
 from collections import defaultdict
 
@@ -87,6 +87,8 @@ class Bigram(object):
                     if front_word not in count_bigram:
                         count_bigram[front_word] = defaultdict(float)
                         count_bigram[front_word][cur_word] += 1
+                    else:
+                        count_bigram[front_word][cur_word] += 1
                     index += 1
 
             write_to_json(count_bigram, self.bigram_file)
@@ -130,7 +132,7 @@ class Bigram(object):
         '''
         return len(self.word_dict)
 
-    def __cal_sentence_prob(self, splits):
+    def cal_sentence_prob(self, splits):
         '''
         使用加一平滑方法，计算得出最大概率分词序列
         :param splits: 分法组合
@@ -175,7 +177,6 @@ class Bigram(object):
             if max_p < P:
                 max_p = P
                 max_index = idx
-
         return splits[max_index]
 
     def __segment_sentence(self, sentence):
@@ -187,7 +188,7 @@ class Bigram(object):
 
         splits = self.__construct_segment(sentence=sentence)
 
-        best = self.__cal_sentence_prob(splits=splits)
+        best = self.cal_sentence_prob(splits=splits)
 
         return best
 
@@ -349,6 +350,7 @@ class HMM(object):
                         path[s][word_idx] = i
 
         back_through = int(np.argmax(weight, axis=0)[len(sentence) - 1])
+        # 回溯过程
         status_result = []
         for idx in range(len(sentence) - 1, -1, -1):
             status_result.append(back_through)
@@ -408,12 +410,15 @@ class MechanicalSegmentation(object):
     '''
     __WORD_DIC = read_from_json(WORD_DICT_FILE)
 
-    def __init__(self, is_backward=True, max_len_of_word=MAX_LEN_OF_WORD):
+    def __init__(self, is_backward=IS_BACK, max_len_of_word=MAX_LEN_OF_WORD):
         self.is_backward = is_backward
         self.max_len_of_word = max_len_of_word
 
     def __str__(self):
-        return 'backward_maximum_match' if self.is_backward else 'forward_maximum_match'
+        if IS_COMBINE:
+            return  'FMM+BMM+Bigram'
+        else:
+            return 'backward_maximum_match' if self.is_backward else 'forward_maximum_match'
 
     def __forward_maximum_match(self, sentence):
         '''
@@ -483,21 +488,31 @@ class MechanicalSegmentation(object):
         segment = segment[::-1]
         return segment
 
-    def segment(self, file):
+    def segment(self, file, is_combine=IS_COMBINE):
         '''
         机械分词算法分词接口,对一段文本分词
         :param file: 要分词的语料
         :return:
         '''
         segment_words = []
-        with open(file, 'r', encoding='utf8') as f:
-            if self.is_backward:
-                for line in f:
-                    segment_words.append(self.__backward_maximum_match(line.strip()))
-            else:
-                for line in f:
-                    segment_words.append(self.__forward_maximum_match(line.strip()))
+        if not is_combine:
+            with open(file, 'r', encoding='utf8') as f:
+                if self.is_backward:
+                    for line in f:
+                        segment_words.append(self.__backward_maximum_match(line.strip()))
+
+                else:
+                    for line in f:
+                        segment_words.append(self.__forward_maximum_match(line.strip()))
+        else:
+            bigram = Bigram()
+            with open(file, 'r', encoding='utf8') as f:
+                if self.is_backward:
+                    for line in f:
+                        back = self.__backward_maximum_match(line.strip())
+                        forward = self.__forward_maximum_match(line.strip())
+                        segment_words.append(bigram.cal_sentence_prob([forward, back]))
+
 
         return segment_words
-
 

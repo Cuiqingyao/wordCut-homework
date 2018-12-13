@@ -5,7 +5,7 @@
 # @Contact: qingyaocui@gmail.com
 
 from cut_model import HMM, MechanicalSegmentation, Bigram
-from  utils.util import read_from_txt
+from util import read_from_txt
 from settings import *
 
 class statistic(object):
@@ -103,5 +103,28 @@ class statistic(object):
         self.print_report()
 
 if __name__ == '__main__':
-    stt = statistic(model=Bigram)
-    stt.evaluation(test_data_file=TEST_FILE, answer_file=ANSWERS)
+    evaluation_model = None
+    import sys
+    if len(sys.argv) == 1:
+        evaluation_model = MechanicalSegmentation
+    elif len(sys.argv) == 2:
+        para = sys.argv[1]
+        print(para)
+        if para == 'bigram':
+            evaluation_model = Bigram
+        elif para == 'hmm' :
+            evaluation_model = HMM
+        elif para == 'ms':
+            IS_COMBINE = False
+            evaluation_model = MechanicalSegmentation
+        else:
+            print("不合法的参数！")
+            exit()
+    else:
+        print("输入参数错误！")
+        exit()
+    if evaluation_model:
+        stt = statistic(model=evaluation_model)
+        stt.evaluation(test_data_file=TEST_FILE, answer_file=ANSWERS)
+    else:
+        print("模型输入错误！")
