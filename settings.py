@@ -64,7 +64,7 @@ WORD_DICT_FILE_FOR_BIGRAM =  os.path.join(BASE_DIR, 'data', 'n_gram', 'word_dict
 BIGRAM_PROB_TAB =  os.path.join(BASE_DIR, 'data', 'n_gram', 'bigram_prob_tab.json')
 
 # n-gram 是否用于评估
-IS_EVALUATION = False
+IS_EVALUATION = True
 
 ################    N-gram    ################
 

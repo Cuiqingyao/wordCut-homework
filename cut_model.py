@@ -68,8 +68,6 @@ class Bigram(object):
 
         return splits
 
-    def test(self, sentence):
-        print(self.__construct_segment(sentence=sentence))
 
     def __build_model(self):
 
@@ -186,7 +184,7 @@ class Bigram(object):
         :param sentence:
         :return:
         '''
-        # 实现重点
+
         splits = self.__construct_segment(sentence=sentence)
 
         best = self.__cal_sentence_prob(splits=splits)
