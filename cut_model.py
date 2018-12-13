@@ -10,8 +10,6 @@ from settings import *
 from utils.util import *
 from tqdm import tqdm
 from collections import defaultdict
-from pprint import pprint
-import json
 
 
 class Bigram(object):
@@ -38,6 +36,7 @@ class Bigram(object):
         :return:可能的切分组合
         '''
         # 切分组合  [ [切分方案1], [切分方案2], ... ]
+
         splits = []
 
         # 递归结束条件
@@ -66,7 +65,11 @@ class Bigram(object):
             for child_group in self.__construct_segment(one_group[1]):
                 child_group.insert(0, one_group[0])
                 splits.append(child_group)
+
         return splits
+
+    def test(self, sentence):
+        print(self.__construct_segment(sentence=sentence))
 
     def __build_model(self):
 
@@ -122,15 +125,6 @@ class Bigram(object):
         word_dict = read_from_json(self.word_dict_file)
         return word_dict
 
-    # def __additive_smoothing(self, c_w1w2, c_w2):
-    #     '''
-    #     加一平滑
-    #     :return:
-    #     '''
-    #     c_w1w2 += 1
-    #     c_w2 += self.__wordtypes()
-    #     return c_w1w2, c_w2
-
     def __wordtypes(self):
         '''
         获取word types
@@ -144,8 +138,9 @@ class Bigram(object):
         :param splits: 分法组合
         :return: 最佳分词方案
         '''
-        maxp_split = []
-
+        all_p = []
+        already_p = {}
+        max_p = -99999
         for split in splits:
             # 计算概率 为了防止溢出 对概率取对数，转换乘法为加法
             index = 0
@@ -153,20 +148,37 @@ class Bigram(object):
             while index < len(split) - 1:
                 cur_word = split[index + 1]
                 front_word = split[index]
-                p_word = cur_word + '|' + front_word
-                if  cur_word in self.bigram[front_word]:
-                    p = math.log(((self.bigram[front_word][cur_word] + 1)/(self.word_dict[front_word] + self.__wordtypes())))
+                key = cur_word + '|' + front_word
+
+                if key in already_p:
+                    P_of_segment += already_p[key]
+                    index += 1
+                    continue
+
+                if front_word in self.bigram and cur_word in self.bigram[front_word]:
+                    p = math.log(
+                        ((self.bigram[front_word][cur_word] + 1) / (self.word_dict[front_word] + self.__wordtypes())))
+
                     P_of_segment += p
+
                 else:
                     if front_word not in self.word_dict:
                         p = math.log(1 / self.__wordtypes())
                     else:
                         p = math.log((1 / (self.word_dict[front_word] + self.__wordtypes())))
+
                     P_of_segment += p
 
+                already_p[key] = p
                 index += 1
+            all_p.append(P_of_segment)
+        max_index = 0
+        for idx, P in enumerate(all_p):
+            if max_p < P:
+                max_p = P
+                max_index = idx
 
-        return maxp_split
+        return splits[max_index]
 
     def __segment_sentence(self, sentence):
         '''
@@ -175,7 +187,11 @@ class Bigram(object):
         :return:
         '''
         # 实现重点
-        return self.__cal_sentence_prob(self.__segment_sentence(sentence=sentence))
+        splits = self.__construct_segment(sentence=sentence)
+
+        best = self.__cal_sentence_prob(splits=splits)
+
+        return best
 
     def segment(self, file):
         '''
@@ -183,10 +199,13 @@ class Bigram(object):
         :param file:
         :return:
         '''
+
         segment_words = []
         with open(file, 'r', encoding='utf8') as f:
-            for line in f:
-                segment_words.append(self.__segment_sentence(line.strip()))
+            context = f.readlines()
+            for i in tqdm(range(len(context))):
+
+                segment_words.append(self.__segment_sentence(context[i].strip()))
 
         return segment_words
 
@@ -482,6 +501,5 @@ class MechanicalSegmentation(object):
                     segment_words.append(self.__forward_maximum_match(line.strip()))
 
         return segment_words
-
 
 

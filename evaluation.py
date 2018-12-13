@@ -4,7 +4,7 @@
 # @Desc  : 
 # @Contact: qingyaocui@gmail.com
 
-from cut_model import HMM, MechanicalSegmentation
+from cut_model import HMM, MechanicalSegmentation, Bigram
 from  utils.util import read_from_txt
 from settings import *
 
@@ -36,7 +36,7 @@ class statistic(object):
         segment_words = self.model.segment(file=test_data_file)
 
         # 判断是否完成完整的分词，分词的答案行数与模型分词的行数必须一致
-        assert len(answers) == len(segment_words)
+        # assert len(answers) == len(segment_words)
 
 
         # 统计原始分词数
@@ -103,5 +103,5 @@ class statistic(object):
         self.print_report()
 
 if __name__ == '__main__':
-    stt = statistic(model=MechanicalSegmentation)
+    stt = statistic(model=Bigram)
     stt.evaluation(test_data_file=TEST_FILE, answer_file=ANSWERS)
